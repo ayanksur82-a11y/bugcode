@@ -1,0 +1,70 @@
+/**
+ * Judul: Free Fire UID Checker
+ * Base URL: https://adenpedia.my.id/update01/
+ * Author: Melvin - t.me/luyatiem
+ * Deskripsi: Mengecek informasi akun Free Fire berdasarkan UID
+ * Channel: https://t.me/aboutvin7x
+ */
+
+async function cekFreeFire(uid) {
+  const cleanUid = String(uid ?? "").trim();
+
+  if (!cleanUid) {
+    return {
+      status: false,
+      message: "UID tidak boleh kosong!",
+    };
+  }
+
+  try {
+    const url = new URL("https://adenpedia.my.id/update01/info.php");
+    url.searchParams.set("uid", cleanUid);
+
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36",
+        Referer: "https://adenpedia.my.id/update01/",
+      },
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!res.ok) {
+      return {
+        status: false,
+        message: `Request gagal: HTTP ${res.status}`,
+      };
+    }
+
+    const text = await res.text();
+
+    if (text.trim().startsWith("<")) {
+      return {
+        status: false,
+        message: "Server sedang maintenance atau mengembalikan halaman HTML.",
+      };
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return {
+        status: false,
+        message: "Respons server bukan JSON yang valid.",
+      };
+    }
+  } catch (error) {
+    return {
+      status: false,
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+module.exports = { cekFreeFire };
+
+// Contoh penggunaan
+(async () => {
+  const result = await cekFreeFire("6660807748");
+  console.log(JSON.stringify(result, null, 2));
+})();
